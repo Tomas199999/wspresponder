@@ -65,43 +65,20 @@ app.get('/usuario', authMiddleware, async (req, res) => {
   });
 });
 
-// --- Endpoint: suscribirse a un plan ---
+// --- Endpoint: obtener URL de suscripcion ---
 app.post('/suscribir', authMiddleware, async (req, res) => {
   const { plan } = req.body;
   if (!MP_PLANES[plan]) {
     return res.status(400).json({ ok: false, error: 'Plan invalido.' });
   }
 
-  const perfil = await obtenerPerfil(req.user.id);
+  // Guardar que plan quiere el usuario para asociarlo despues
+  await supabase.from('perfiles')
+    .update({ plan_pendiente: plan })
+    .eq('id', req.user.id);
 
-  try {
-    const response = await fetch('https://api.mercadopago.com/preapproval', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${process.env.MP_ACCESS_TOKEN}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        preapproval_plan_id: MP_PLANES[plan],
-        payer_email: perfil.email,
-        external_reference: `${req.user.id}|${plan}`,
-        back_url: 'https://wspresponder.vercel.app',
-        status: 'pending'
-      })
-    });
-
-    const data = await response.json();
-
-    if (data.init_point) {
-      res.json({ ok: true, url: data.init_point });
-    } else {
-      console.error('Error MP:', data);
-      res.status(500).json({ ok: false, error: 'Error al crear suscripcion.' });
-    }
-  } catch (err) {
-    console.error('Error MP:', err.message);
-    res.status(500).json({ ok: false, error: 'Error al conectar con Mercado Pago.' });
-  }
+  const url = `https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=${MP_PLANES[plan]}`;
+  res.json({ ok: true, url });
 });
 
 // --- Webhook de Mercado Pago ---
@@ -109,23 +86,27 @@ app.post('/webhook/mp', async (req, res) => {
   res.status(200).send('OK');
 
   const { type, data } = req.body;
-  if (type !== 'subscription_preapproval') return;
+  if (type !== 'subscription_preapproval' || !data?.id) return;
 
   try {
     const response = await fetch(`https://api.mercadopago.com/preapproval/${data.id}`, {
       headers: { 'Authorization': `Bearer ${process.env.MP_ACCESS_TOKEN}` }
     });
     const sub = await response.json();
+    const payerEmail = sub.payer_email;
+    if (!payerEmail) return;
 
-    if (!sub.external_reference) return;
-    const [userId, plan] = sub.external_reference.split('|');
+    // Determinar el plan segun el monto
+    let plan = 'gratis';
+    if (sub.auto_recurring?.transaction_amount === 4990) plan = 'basico';
+    else if (sub.auto_recurring?.transaction_amount === 9990) plan = 'pro';
 
     if (sub.status === 'authorized') {
-      await supabase.from('perfiles').update({ plan }).eq('id', userId);
-      console.log(`Plan actualizado a ${plan} para ${userId}`);
+      await supabase.from('perfiles').update({ plan }).eq('email', payerEmail);
+      console.log(`Plan actualizado a ${plan} para ${payerEmail}`);
     } else if (sub.status === 'cancelled' || sub.status === 'paused') {
-      await supabase.from('perfiles').update({ plan: 'gratis' }).eq('id', userId);
-      console.log(`Plan revertido a gratis para ${userId}`);
+      await supabase.from('perfiles').update({ plan: 'gratis' }).eq('email', payerEmail);
+      console.log(`Plan revertido a gratis para ${payerEmail}`);
     }
   } catch (err) {
     console.error('Error webhook:', err.message);
