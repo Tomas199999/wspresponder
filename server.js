@@ -115,8 +115,8 @@ app.post('/generar', authMiddleware, async (req, res) => {
       .update({ usos_este_mes: perfil.usos_este_mes + 1 })
       .eq('id', req.user.id);
 
-    // Guardar en historial (no bloquear la respuesta si falla)
-    supabase.from('historial').insert({
+    // Guardar en historial
+    const { error: histError } = await supabase.from('historial').insert({
       user_id: req.user.id,
       mensaje_cliente: mensaje,
       tono,
@@ -125,7 +125,8 @@ app.post('/generar', authMiddleware, async (req, res) => {
       tipo_negocio: tipoNegocio || null,
       palabras_clave: palabrasClave || null,
       respuestas
-    }).catch(err => console.error('Error guardando historial:', err.message));
+    });
+    if (histError) console.error('Error guardando historial:', histError.message);
 
     res.json({
       ok: true,
