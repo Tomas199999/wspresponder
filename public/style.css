@@ -935,10 +935,12 @@ main {
   background: rgba(0, 0, 0, 0.7);
   backdrop-filter: blur(8px);
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   z-index: 100;
   padding: 20px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   animation: fadeIn 0.2s ease;
 }
 
@@ -955,6 +957,8 @@ main {
   max-width: 680px;
   width: 100%;
   position: relative;
+  margin: auto 0;
+  flex-shrink: 0;
   animation: slideUp 0.3s ease;
 }
 
