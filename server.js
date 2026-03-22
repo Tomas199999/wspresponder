@@ -365,7 +365,7 @@ Responde SOLO con las 3 respuestas separadas por ||| sin nada mas.`;
 // Local development
 if (process.env.NODE_ENV !== 'production') {
   app.listen(PORT, () => {
-    console.log(`MensajeAI corriendo en http://localhost:${PORT}`);
+    console.log(`MensajesIA corriendo en http://localhost:${PORT}`);
   });
 }
 
