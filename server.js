@@ -115,6 +115,18 @@ app.post('/generar', authMiddleware, async (req, res) => {
       .update({ usos_este_mes: perfil.usos_este_mes + 1 })
       .eq('id', req.user.id);
 
+    // Guardar en historial (no bloquear la respuesta si falla)
+    supabase.from('historial').insert({
+      user_id: req.user.id,
+      mensaje_cliente: mensaje,
+      tono,
+      largo: largo || 'media',
+      nombre_negocio: nombreNegocio || null,
+      tipo_negocio: tipoNegocio || null,
+      palabras_clave: palabrasClave || null,
+      respuestas
+    }).catch(err => console.error('Error guardando historial:', err.message));
+
     res.json({
       ok: true,
       respuestas,
@@ -125,6 +137,37 @@ app.post('/generar', authMiddleware, async (req, res) => {
     console.error('Error con DeepSeek:', err.message);
     res.status(500).json({ ok: false, error: 'Error al generar respuestas. Intenta de nuevo.' });
   }
+});
+
+// --- Endpoint: obtener historial ---
+app.get('/historial', authMiddleware, async (req, res) => {
+  const { data, error } = await supabase
+    .from('historial')
+    .select('*')
+    .eq('user_id', req.user.id)
+    .order('created_at', { ascending: false })
+    .limit(50);
+
+  if (error) {
+    return res.status(500).json({ ok: false, error: 'Error al cargar el historial.' });
+  }
+
+  res.json({ ok: true, historial: data });
+});
+
+// --- Endpoint: eliminar del historial ---
+app.delete('/historial/:id', authMiddleware, async (req, res) => {
+  const { error } = await supabase
+    .from('historial')
+    .delete()
+    .eq('id', req.params.id)
+    .eq('user_id', req.user.id);
+
+  if (error) {
+    return res.status(500).json({ ok: false, error: 'Error al eliminar.' });
+  }
+
+  res.json({ ok: true });
 });
 
 // --- Obtener perfil con reset mensual ---

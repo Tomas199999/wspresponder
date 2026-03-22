@@ -274,5 +274,143 @@ async function logout() {
   document.getElementById('landing').classList.remove('oculto');
 }
 
+// --- Historial ---
+async function abrirHistorial() {
+  document.querySelector('.formulario').classList.add('oculto');
+  document.getElementById('respuestas').classList.add('oculto');
+  document.getElementById('loading').classList.add('oculto');
+  document.getElementById('error').classList.add('oculto');
+  document.getElementById('uso-bar-section').classList.add('oculto');
+  document.getElementById('historial-section').classList.remove('oculto');
+  await cargarHistorial();
+}
+
+function cerrarHistorial() {
+  document.getElementById('historial-section').classList.add('oculto');
+  document.querySelector('.formulario').classList.remove('oculto');
+  document.getElementById('uso-bar-section').classList.remove('oculto');
+}
+
+async function cargarHistorial() {
+  const loadingDiv = document.getElementById('historial-loading');
+  const vacioDiv = document.getElementById('historial-vacio');
+  const listaDiv = document.getElementById('lista-historial');
+
+  loadingDiv.classList.remove('oculto');
+  vacioDiv.classList.add('oculto');
+  listaDiv.innerHTML = '';
+
+  try {
+    const res = await fetchAuth('/historial');
+    const data = await res.json();
+    loadingDiv.classList.add('oculto');
+
+    if (!data.ok || !data.historial || data.historial.length === 0) {
+      vacioDiv.classList.remove('oculto');
+      return;
+    }
+
+    data.historial.forEach(item => {
+      listaDiv.appendChild(crearCardHistorial(item));
+    });
+  } catch (err) {
+    loadingDiv.classList.add('oculto');
+    vacioDiv.classList.remove('oculto');
+  }
+}
+
+function escapeHTML(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function crearCardHistorial(item) {
+  const card = document.createElement('div');
+  card.className = 'historial-card';
+  card.id = `historial-${item.id}`;
+
+  const fecha = new Date(item.created_at).toLocaleDateString('es-AR', {
+    day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
+  });
+
+  const meta = [item.tono, item.largo];
+  if (item.nombre_negocio) meta.push(item.nombre_negocio);
+  if (item.tipo_negocio) meta.push(item.tipo_negocio);
+
+  let respHTML = '';
+  item.respuestas.forEach((resp, i) => {
+    respHTML += `
+      <div class="historial-respuesta">
+        <div class="respuesta-numero">${i + 1}</div>
+        <div class="respuesta-contenido">
+          <p class="respuesta-texto">${escapeHTML(resp)}</p>
+          <button class="btn-copiar" onclick="copiarTexto(this, '${escapeHTML(resp).replace(/'/g, "\\'")}')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+            </svg>
+            Copiar
+          </button>
+        </div>
+      </div>`;
+  });
+
+  card.innerHTML = `
+    <div class="historial-card-header">
+      <div class="historial-meta">
+        <span class="historial-fecha">${fecha}</span>
+        <span class="historial-tags">${meta.join(' / ')}</span>
+      </div>
+      <button class="btn-eliminar-historial" onclick="eliminarHistorial('${item.id}')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+          <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+        </svg>
+      </button>
+    </div>
+    <div class="historial-mensaje">
+      <span class="historial-label">Mensaje del cliente:</span>
+      <p>"${escapeHTML(item.mensaje_cliente)}"</p>
+    </div>
+    <div class="historial-respuestas">${respHTML}</div>
+  `;
+
+  return card;
+}
+
+async function copiarTexto(btn, texto) {
+  try { await navigator.clipboard.writeText(texto); } catch (err) {
+    const ta = document.createElement('textarea'); ta.value = texto;
+    document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+  }
+  btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M20 6L9 17l-5-5"></path></svg> Copiado!`;
+  btn.classList.add('copiado');
+  setTimeout(() => {
+    btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> Copiar`;
+    btn.classList.remove('copiado');
+  }, 2000);
+}
+
+async function eliminarHistorial(id) {
+  try {
+    const res = await fetchAuth(`/historial/${id}`, { method: 'DELETE' });
+    const data = await res.json();
+    if (data.ok) {
+      const card = document.getElementById(`historial-${id}`);
+      card.style.opacity = '0';
+      card.style.transform = 'translateY(-10px)';
+      card.style.transition = 'all 0.3s';
+      setTimeout(() => {
+        card.remove();
+        if (document.getElementById('lista-historial').children.length === 0) {
+          document.getElementById('historial-vacio').classList.remove('oculto');
+        }
+      }, 300);
+    }
+  } catch (err) {
+    mostrarError('Error al eliminar del historial.');
+  }
+}
+
 // --- Escape para cerrar modal ---
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape') cerrarPlanes(); });

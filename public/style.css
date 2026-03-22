@@ -1158,6 +1158,132 @@ footer {
   border-top: 1px solid rgba(255,255,255,0.05);
 }
 
+/* --- Historial --- */
+.historial-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.historial-header h3 {
+  font-size: 1.1rem;
+  color: #fff;
+}
+
+.btn-cerrar-historial {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: #ccc;
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-cerrar-historial:hover {
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+}
+
+.historial-vacio {
+  text-align: center;
+  color: #666;
+  padding: 40px 20px;
+  font-size: 0.9rem;
+}
+
+.historial-card {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 14px;
+  padding: 20px;
+  margin-bottom: 16px;
+  transition: border-color 0.2s;
+  animation: fadeUp 0.4s ease forwards;
+  opacity: 0;
+}
+
+.historial-card:hover {
+  border-color: rgba(59, 130, 246, 0.2);
+}
+
+.historial-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.historial-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.historial-fecha {
+  font-size: 0.78rem;
+  color: #666;
+}
+
+.historial-tags {
+  font-size: 0.78rem;
+  color: #888;
+  text-transform: capitalize;
+}
+
+.btn-eliminar-historial {
+  background: none;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 6px;
+  color: #666;
+  padding: 4px 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-eliminar-historial:hover {
+  color: #f87171;
+  border-color: rgba(248, 113, 113, 0.3);
+  background: rgba(248, 113, 113, 0.1);
+}
+
+.historial-mensaje {
+  background: rgba(255,255,255,0.03);
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-bottom: 14px;
+}
+
+.historial-label {
+  font-size: 0.75rem;
+  color: #555;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.historial-mensaje p {
+  font-size: 0.88rem;
+  color: #aaa;
+  font-style: italic;
+  line-height: 1.5;
+}
+
+.historial-respuesta {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 0;
+  border-top: 1px solid rgba(255,255,255,0.05);
+}
+
+.historial-respuesta:first-child {
+  border-top: none;
+}
+
 /* --- Utilidades --- */
 .oculto {
   display: none !important;

@@ -188,6 +188,12 @@
           Mensaje<span>AI</span>
         </h1>
         <nav class="header-nav">
+          <button class="nav-btn" onclick="abrirHistorial()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+              <path d="M12 8v4l3 3"></path><circle cx="12" cy="12" r="10"></circle>
+            </svg>
+            Historial
+          </button>
           <button class="nav-btn" onclick="abrirPlanes()">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
               <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
@@ -286,6 +292,22 @@
       <section id="respuestas" class="respuestas oculto">
         <h3>Tus respuestas</h3>
         <div id="lista-respuestas"></div>
+      </section>
+
+      <!-- Historial -->
+      <section id="historial-section" class="historial-section oculto">
+        <div class="historial-header">
+          <h3>Historial de respuestas</h3>
+          <button class="btn-cerrar-historial" onclick="cerrarHistorial()">Volver al generador</button>
+        </div>
+        <div id="historial-loading" class="loading oculto">
+          <div class="spinner"></div>
+          <p>Cargando historial...</p>
+        </div>
+        <div id="historial-vacio" class="historial-vacio oculto">
+          <p>Todavia no generaste ninguna respuesta. Genera tu primera respuesta y va a aparecer aca.</p>
+        </div>
+        <div id="lista-historial"></div>
       </section>
 
     </main>
