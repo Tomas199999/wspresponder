@@ -116,7 +116,7 @@ app.post('/generar', authMiddleware, async (req, res) => {
       .eq('id', req.user.id);
 
     // Guardar en historial
-    const { error: histError } = await supabase.from('historial').insert({
+    const histData = {
       user_id: req.user.id,
       mensaje_cliente: mensaje,
       tono,
@@ -125,8 +125,14 @@ app.post('/generar', authMiddleware, async (req, res) => {
       tipo_negocio: tipoNegocio || null,
       palabras_clave: palabrasClave || null,
       respuestas
-    });
-    if (histError) console.error('Error guardando historial:', histError.message);
+    };
+    console.log('Guardando historial:', JSON.stringify(histData));
+    const { data: histResult, error: histError } = await supabase.from('historial').insert(histData).select();
+    if (histError) {
+      console.error('Error guardando historial:', histError);
+    } else {
+      console.log('Historial guardado OK:', histResult);
+    }
 
     res.json({
       ok: true,
