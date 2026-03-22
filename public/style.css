@@ -382,6 +382,24 @@
   border-top: 1px solid rgba(255,255,255,0.05);
 }
 
+.footer-links {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  margin-top: 8px;
+}
+
+.footer-links a {
+  color: #555;
+  font-size: 0.75rem;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.footer-links a:hover {
+  color: #3b82f6;
+}
+
 /* Landing responsive */
 @media (max-width: 768px) {
   .hero h2 {
