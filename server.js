@@ -72,11 +72,6 @@ app.post('/suscribir', authMiddleware, async (req, res) => {
     return res.status(400).json({ ok: false, error: 'Plan invalido.' });
   }
 
-  // Guardar que plan quiere el usuario para asociarlo despues
-  await supabase.from('perfiles')
-    .update({ plan_pendiente: plan })
-    .eq('id', req.user.id);
-
   const url = `https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=${MP_PLANES[plan]}`;
   res.json({ ok: true, url });
 });
