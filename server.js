@@ -22,11 +22,13 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 const PLANES = {
   gratis:  { nombre: 'Gratis',  precio: '$0',     limiteMensual: 5 },
+  test:    { nombre: 'Test',    precio: '$15',     limiteMensual: 10 },
   basico:  { nombre: 'Basico',  precio: '$4.990', limiteMensual: 50 },
   pro:     { nombre: 'Pro',     precio: '$9.990', limiteMensual: null }
 };
 
 const MP_PLANES = {
+  test: '3c30673db0dd40a5bb68886675b0e277',
   basico: 'd603aa00ba6c44a3bfd89f7a38399ada',
   pro: 'a4c458e17db641579b90be324a3f21a5'
 };
@@ -93,8 +95,10 @@ app.post('/webhook/mp', async (req, res) => {
 
     // Determinar el plan segun el monto
     let plan = 'gratis';
-    if (sub.auto_recurring?.transaction_amount === 4990) plan = 'basico';
-    else if (sub.auto_recurring?.transaction_amount === 9990) plan = 'pro';
+    const monto = sub.auto_recurring?.transaction_amount;
+    if (monto === 15) plan = 'test';
+    else if (monto === 4990) plan = 'basico';
+    else if (monto === 9990) plan = 'pro';
 
     if (sub.status === 'authorized') {
       await supabase.from('perfiles').update({ plan }).eq('email', payerEmail);

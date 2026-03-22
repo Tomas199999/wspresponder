@@ -229,13 +229,14 @@ function cerrarPlanesOverlay(e) { if (e.target === e.currentTarget) cerrarPlanes
 
 function actualizarCardsModal() {
   const cards = {
+    test: document.getElementById('card-test'),
     gratis: document.getElementById('card-gratis'),
     basico: document.getElementById('card-basico'),
     pro: document.getElementById('card-pro')
   };
   if (!cards.gratis || !cards.basico || !cards.pro) return;
 
-  const labels = { gratis: 'Seleccionar Gratis', basico: 'Seleccionar Basico', pro: 'Seleccionar Pro' };
+  const labels = { test: 'Seleccionar Test', gratis: 'Seleccionar Gratis', basico: 'Seleccionar Basico', pro: 'Seleccionar Pro' };
   for (const [plan, card] of Object.entries(cards)) {
     const btn = card.querySelector('.plan-btn');
     card.classList.toggle('activo', planActual === plan);
