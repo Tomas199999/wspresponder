@@ -251,20 +251,45 @@ function actualizarCardsModal() {
 
 async function seleccionarPlan(plan) {
   if (plan === planActual) return;
+
+  // Si es plan gratis, cambiar directo
+  if (plan === 'gratis') {
+    try {
+      const res = await fetchAuth('/cambiar-plan', {
+        method: 'POST',
+        body: JSON.stringify({ plan: 'gratis' })
+      });
+      const data = await res.json();
+      if (data.ok) {
+        actualizarUI({ plan: data.plan, usosEsteMes: data.usosEsteMes, limiteMensual: data.limiteMensual });
+        cerrarPlanes();
+      }
+    } catch (err) { mostrarError('Error al cambiar el plan.'); }
+    return;
+  }
+
+  // Para planes pagos, redirigir a Mercado Pago
   try {
-    const res = await fetchAuth('/cambiar-plan', {
+    const btn = document.querySelector(`#card-${plan} .plan-btn`);
+    btn.textContent = 'Redirigiendo...';
+    btn.disabled = true;
+
+    const res = await fetchAuth('/suscribir', {
       method: 'POST',
       body: JSON.stringify({ plan })
     });
     const data = await res.json();
-    if (data.ok) {
-      actualizarUI({
-        plan: data.plan,
-        usosEsteMes: data.usosEsteMes,
-        limiteMensual: data.limiteMensual
-      });
+
+    if (data.ok && data.url) {
+      window.location.href = data.url;
+    } else {
+      mostrarError(data.error || 'Error al crear suscripcion.');
+      btn.textContent = plan === 'basico' ? 'Seleccionar Basico' : 'Seleccionar Pro';
+      btn.disabled = false;
     }
-  } catch (err) { mostrarError('Error al cambiar el plan.'); }
+  } catch (err) {
+    mostrarError('Error al conectar con Mercado Pago.');
+  }
 }
 
 // --- Logout ---

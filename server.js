@@ -26,6 +26,11 @@ const PLANES = {
   pro:     { nombre: 'Pro',     precio: '$9.990', limiteMensual: null }
 };
 
+const MP_PLANES = {
+  basico: 'd603aa00ba6c44a3bfd89f7a38399ada',
+  pro: 'a4c458e17db641579b90be324a3f21a5'
+};
+
 // --- Middleware: verificar autenticacion ---
 async function authMiddleware(req, res, next) {
   const token = req.headers.authorization?.replace('Bearer ', '');
@@ -60,16 +65,83 @@ app.get('/usuario', authMiddleware, async (req, res) => {
   });
 });
 
-// --- Endpoint: cambiar plan ---
+// --- Endpoint: suscribirse a un plan ---
+app.post('/suscribir', authMiddleware, async (req, res) => {
+  const { plan } = req.body;
+  if (!MP_PLANES[plan]) {
+    return res.status(400).json({ ok: false, error: 'Plan invalido.' });
+  }
+
+  const perfil = await obtenerPerfil(req.user.id);
+
+  try {
+    const response = await fetch('https://api.mercadopago.com/preapproval', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${process.env.MP_ACCESS_TOKEN}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        preapproval_plan_id: MP_PLANES[plan],
+        payer_email: perfil.email,
+        external_reference: `${req.user.id}|${plan}`,
+        back_url: 'https://wspresponder.vercel.app',
+        status: 'pending'
+      })
+    });
+
+    const data = await response.json();
+
+    if (data.init_point) {
+      res.json({ ok: true, url: data.init_point });
+    } else {
+      console.error('Error MP:', data);
+      res.status(500).json({ ok: false, error: 'Error al crear suscripcion.' });
+    }
+  } catch (err) {
+    console.error('Error MP:', err.message);
+    res.status(500).json({ ok: false, error: 'Error al conectar con Mercado Pago.' });
+  }
+});
+
+// --- Webhook de Mercado Pago ---
+app.post('/webhook/mp', async (req, res) => {
+  res.status(200).send('OK');
+
+  const { type, data } = req.body;
+  if (type !== 'subscription_preapproval') return;
+
+  try {
+    const response = await fetch(`https://api.mercadopago.com/preapproval/${data.id}`, {
+      headers: { 'Authorization': `Bearer ${process.env.MP_ACCESS_TOKEN}` }
+    });
+    const sub = await response.json();
+
+    if (!sub.external_reference) return;
+    const [userId, plan] = sub.external_reference.split('|');
+
+    if (sub.status === 'authorized') {
+      await supabase.from('perfiles').update({ plan }).eq('id', userId);
+      console.log(`Plan actualizado a ${plan} para ${userId}`);
+    } else if (sub.status === 'cancelled' || sub.status === 'paused') {
+      await supabase.from('perfiles').update({ plan: 'gratis' }).eq('id', userId);
+      console.log(`Plan revertido a gratis para ${userId}`);
+    }
+  } catch (err) {
+    console.error('Error webhook:', err.message);
+  }
+});
+
+// --- Endpoint: cambiar plan (manual, para downgrade a gratis) ---
 app.post('/cambiar-plan', authMiddleware, async (req, res) => {
   const { plan } = req.body;
-  if (!PLANES[plan]) {
-    return res.status(400).json({ ok: false, error: 'Plan invalido.' });
+  if (plan !== 'gratis') {
+    return res.status(400).json({ ok: false, error: 'Para planes pagos usa la suscripcion.' });
   }
 
   const { error } = await supabase
     .from('perfiles')
-    .update({ plan })
+    .update({ plan: 'gratis' })
     .eq('id', req.user.id);
 
   if (error) {
