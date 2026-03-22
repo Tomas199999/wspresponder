@@ -74,40 +74,53 @@ app.post('/suscribir', authMiddleware, async (req, res) => {
     return res.status(400).json({ ok: false, error: 'Plan invalido.' });
   }
 
+  // Guardar plan pendiente antes de redirigir
+  await supabase.from('perfiles')
+    .update({ plan_pendiente: plan })
+    .eq('id', req.user.id);
+
+  const url = `https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=${MP_PLANES[plan]}`;
+  res.json({ ok: true, url });
+});
+
+// --- Endpoint: verificar pago despues de volver de MP ---
+app.post('/verificar-pago', authMiddleware, async (req, res) => {
+  const perfil = await obtenerPerfil(req.user.id);
+  if (!perfil.plan_pendiente) {
+    return res.json({ ok: true, actualizado: false });
+  }
+
   try {
-    // Crear suscripcion con external_reference para asociar al usuario
-    const perfil = await obtenerPerfil(req.user.id);
-    const response = await fetch('https://api.mercadopago.com/preapproval', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${process.env.MP_ACCESS_TOKEN}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        preapproval_plan_id: MP_PLANES[plan],
-        external_reference: `${req.user.id}|${plan}`,
-        payer_email: perfil.email,
-        back_url: 'https://wspresponder.vercel.app/?from=mp',
-        status: 'pending'
-      })
+    // Buscar suscripciones autorizadas recientes
+    const response = await fetch('https://api.mercadopago.com/preapproval/search?status=authorized&sort=date_created&criteria=desc&limit=10', {
+      headers: { 'Authorization': `Bearer ${process.env.MP_ACCESS_TOKEN}` }
+    });
+    const data = await response.json();
+
+    // Buscar el monto que corresponde al plan pendiente
+    const montos = { test: 15, basico: 4990, pro: 9990 };
+    const montoEsperado = montos[perfil.plan_pendiente];
+
+    // Buscar suscripcion reciente (ultimos 10 min) con ese monto
+    const ahora = new Date();
+    const sub = data.results?.find(s => {
+      const creada = new Date(s.date_created);
+      const diffMin = (ahora - creada) / 1000 / 60;
+      return s.auto_recurring?.transaction_amount === montoEsperado && diffMin < 30;
     });
 
-    const data = await response.json();
-    console.log('MP response:', JSON.stringify(data));
-
-    if (data.init_point) {
-      res.json({ ok: true, url: data.init_point });
-    } else {
-      // Fallback: redirigir al checkout del plan directamente
-      const url = `https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=${MP_PLANES[plan]}`;
-      // Guardar mapeo payer en la DB para buscar despues
-      await supabase.from('perfiles').update({ plan_pendiente: plan }).eq('id', req.user.id);
-      res.json({ ok: true, url });
+    if (sub) {
+      await supabase.from('perfiles')
+        .update({ plan: perfil.plan_pendiente, plan_pendiente: null })
+        .eq('id', req.user.id);
+      console.log(`Plan verificado y actualizado a ${perfil.plan_pendiente} para ${perfil.email}`);
+      return res.json({ ok: true, actualizado: true, plan: perfil.plan_pendiente });
     }
+
+    res.json({ ok: true, actualizado: false });
   } catch (err) {
-    console.error('Error MP:', err.message);
-    const url = `https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=${MP_PLANES[plan]}`;
-    res.json({ ok: true, url });
+    console.error('Error verificando pago:', err.message);
+    res.json({ ok: true, actualizado: false });
   }
 });
 

@@ -15,6 +15,7 @@
     { "src": "/usuario", "dest": "/api/index.js" },
     { "src": "/cambiar-plan", "dest": "/api/index.js" },
     { "src": "/suscribir", "dest": "/api/index.js" },
+    { "src": "/verificar-pago", "dest": "/api/index.js" },
     { "src": "/webhook/mp", "dest": "/api/index.js" },
     { "src": "/historial/(.*)", "dest": "/api/index.js" },
     { "src": "/historial", "dest": "/api/index.js" },

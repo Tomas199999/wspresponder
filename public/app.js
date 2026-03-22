@@ -16,14 +16,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('landing').classList.add('oculto');
     await mostrarApp(session);
 
-    // Si viene de Mercado Pago, verificar plan actualizado
+    // Si viene de Mercado Pago, verificar pago
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('from') === 'mp' || urlParams.get('preapproval_id') || document.referrer.includes('mercadopago')) {
-      // Limpiar URL
       window.history.replaceState({}, '', '/');
-      // Esperar un poco y recargar datos del usuario (el webhook puede tardar)
-      setTimeout(() => cargarUsuario(), 3000);
-      setTimeout(() => cargarUsuario(), 8000);
+      await verificarPago();
     }
   } else {
     document.getElementById('landing').classList.remove('oculto');
@@ -445,6 +442,19 @@ async function eliminarHistorial(id) {
     }
   } catch (err) {
     mostrarError('Error al eliminar del historial.');
+  }
+}
+
+// --- Verificar pago de MP ---
+async function verificarPago() {
+  try {
+    const res = await fetchAuth('/verificar-pago', { method: 'POST' });
+    const data = await res.json();
+    if (data.actualizado) {
+      await cargarUsuario();
+    }
+  } catch (err) {
+    console.error('Error verificando pago:', err);
   }
 }
 
