@@ -2,11 +2,17 @@ require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const OpenAI = require('openai');
+const { createClient } = require('@supabase/supabase-js');
 
 const deepseek = new OpenAI({
   baseURL: 'https://api.deepseek.com',
   apiKey: process.env.DEEPSEEK_API_KEY
 });
+
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_ANON_KEY
+);
 
 const app = express();
 const PORT = 3000;
@@ -14,60 +20,86 @@ const PORT = 3000;
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// --- Estado del usuario (simulado en memoria) ---
 const PLANES = {
   gratis:  { nombre: 'Gratis',  precio: '$0',     limiteMensual: 5 },
   basico:  { nombre: 'Basico',  precio: '$4.990', limiteMensual: 50 },
   pro:     { nombre: 'Pro',     precio: '$9.990', limiteMensual: null }
 };
 
-const usuario = {
-  nombre: 'Usuario Demo',
-  plan: 'gratis',
-  usosEsteMes: 0
-};
+// --- Middleware: verificar autenticacion ---
+async function authMiddleware(req, res, next) {
+  const token = req.headers.authorization?.replace('Bearer ', '');
+  if (!token) {
+    return res.status(401).json({ ok: false, error: 'No autenticado.' });
+  }
+
+  const { data: { user }, error } = await supabase.auth.getUser(token);
+  if (error || !user) {
+    return res.status(401).json({ ok: false, error: 'Token invalido.' });
+  }
+
+  req.user = user;
+  next();
+}
 
 // --- Endpoint: obtener datos del usuario ---
-app.get('/usuario', (req, res) => {
-  const planInfo = PLANES[usuario.plan];
+app.get('/usuario', authMiddleware, async (req, res) => {
+  const perfil = await obtenerPerfil(req.user.id);
+  if (!perfil) {
+    return res.status(404).json({ ok: false, error: 'Perfil no encontrado.' });
+  }
+
+  const planInfo = PLANES[perfil.plan] || PLANES.gratis;
   res.json({
-    nombre: usuario.nombre,
-    plan: usuario.plan,
+    email: perfil.email,
+    plan: perfil.plan,
     planNombre: planInfo.nombre,
     precio: planInfo.precio,
-    usosEsteMes: usuario.usosEsteMes,
+    usosEsteMes: perfil.usos_este_mes,
     limiteMensual: planInfo.limiteMensual
   });
 });
 
 // --- Endpoint: cambiar plan ---
-app.post('/cambiar-plan', (req, res) => {
+app.post('/cambiar-plan', authMiddleware, async (req, res) => {
   const { plan } = req.body;
   if (!PLANES[plan]) {
     return res.status(400).json({ ok: false, error: 'Plan invalido.' });
   }
-  usuario.plan = plan;
-  const planInfo = PLANES[plan];
+
+  const { error } = await supabase
+    .from('perfiles')
+    .update({ plan })
+    .eq('id', req.user.id);
+
+  if (error) {
+    return res.status(500).json({ ok: false, error: 'Error al cambiar plan.' });
+  }
+
+  const perfil = await obtenerPerfil(req.user.id);
+  const planInfo = PLANES[perfil.plan];
   res.json({
     ok: true,
-    plan: usuario.plan,
+    plan: perfil.plan,
     planNombre: planInfo.nombre,
     precio: planInfo.precio,
-    usosEsteMes: usuario.usosEsteMes,
+    usosEsteMes: perfil.usos_este_mes,
     limiteMensual: planInfo.limiteMensual
   });
 });
 
 // --- Endpoint: generar respuestas ---
-app.post('/generar', async (req, res) => {
+app.post('/generar', authMiddleware, async (req, res) => {
   const { mensaje, tono, nombreNegocio, tipoNegocio, largo, palabrasClave } = req.body;
 
   if (!mensaje || !tono) {
     return res.status(400).json({ ok: false, error: 'El mensaje y el tono son obligatorios.' });
   }
 
-  const planInfo = PLANES[usuario.plan];
-  if (planInfo.limiteMensual !== null && usuario.usosEsteMes >= planInfo.limiteMensual) {
+  const perfil = await obtenerPerfil(req.user.id);
+  const planInfo = PLANES[perfil.plan] || PLANES.gratis;
+
+  if (planInfo.limiteMensual !== null && perfil.usos_este_mes >= planInfo.limiteMensual) {
     return res.status(403).json({
       ok: false,
       error: `Llegaste al limite de tu plan (${planInfo.limiteMensual} respuestas). Mejora tu plan para seguir generando \uD83D\uDE80`
@@ -76,19 +108,48 @@ app.post('/generar', async (req, res) => {
 
   try {
     const respuestas = await generarConIA(mensaje, tono, nombreNegocio, tipoNegocio, largo || 'media', palabrasClave);
-    usuario.usosEsteMes++;
+
+    // Incrementar usos en la base de datos
+    await supabase
+      .from('perfiles')
+      .update({ usos_este_mes: perfil.usos_este_mes + 1 })
+      .eq('id', req.user.id);
 
     res.json({
       ok: true,
       respuestas,
-      usosEsteMes: usuario.usosEsteMes,
-      limiteMensual: PLANES[usuario.plan].limiteMensual
+      usosEsteMes: perfil.usos_este_mes + 1,
+      limiteMensual: planInfo.limiteMensual
     });
   } catch (err) {
-    console.error('Error con Gemini:', err.message);
+    console.error('Error con DeepSeek:', err.message);
     res.status(500).json({ ok: false, error: 'Error al generar respuestas. Intenta de nuevo.' });
   }
 });
+
+// --- Obtener perfil con reset mensual ---
+async function obtenerPerfil(userId) {
+  const { data, error } = await supabase
+    .from('perfiles')
+    .select('*')
+    .eq('id', userId)
+    .single();
+
+  if (error || !data) return null;
+
+  // Reset mensual: si cambio el mes, reiniciar contador
+  const mesActual = new Date().toISOString().slice(0, 7); // '2026-03'
+  if (data.mes_actual !== mesActual) {
+    await supabase
+      .from('perfiles')
+      .update({ usos_este_mes: 0, mes_actual: mesActual })
+      .eq('id', userId);
+    data.usos_este_mes = 0;
+    data.mes_actual = mesActual;
+  }
+
+  return data;
+}
 
 // --- Generador de respuestas con DeepSeek ---
 async function generarConIA(mensaje, tono, nombreNegocio, tipoNegocio, largo, palabrasClave) {
@@ -137,11 +198,8 @@ Responde SOLO con las 3 respuestas separadas por ||| sin nada mas.`;
   });
 
   const texto = completion.choices[0].message.content.trim();
-
-  // Parsear las 3 respuestas
   const respuestas = texto.split('|||').map(r => r.trim()).filter(r => r.length > 0);
 
-  // Asegurar que siempre devolvemos exactamente 3
   while (respuestas.length < 3) {
     respuestas.push(respuestas[0] || 'Hola! En que te podemos ayudar?');
   }

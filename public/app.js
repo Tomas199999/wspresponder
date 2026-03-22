@@ -1,28 +1,128 @@
-// --- Estado local ---
-let planActual = 'basico';
+// --- Supabase client ---
+const SUPABASE_URL = 'https://ojdzccddsoktdfhzuwki.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9qZHpjY2Rkc29rdGRmaHp1d2tpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyMDkxODIsImV4cCI6MjA4OTc4NTE4Mn0.VFUim58h4y_hXF240CC7wUh_rSvSHWiLXfzkOuug8Xg';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// --- Estado ---
+let planActual = 'gratis';
 let usosActual = 0;
-let limiteActual = 20;
+let limiteActual = 5;
+let authMode = 'login'; // 'login' o 'register'
 
-// --- Al cargar la pagina ---
-document.addEventListener('DOMContentLoaded', cargarUsuario);
+// --- Al cargar ---
+document.addEventListener('DOMContentLoaded', async () => {
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) {
+    mostrarApp(session);
+  } else {
+    document.getElementById('auth-screen').classList.remove('oculto');
+  }
+});
 
+// --- Auth: login o registro ---
+async function handleAuth(e) {
+  e.preventDefault();
+  const email = document.getElementById('auth-email').value.trim();
+  const password = document.getElementById('auth-password').value;
+  const btn = document.getElementById('btn-auth');
+  const errorDiv = document.getElementById('auth-error');
+
+  errorDiv.classList.add('oculto');
+  btn.disabled = true;
+  btn.textContent = authMode === 'login' ? 'Iniciando...' : 'Registrando...';
+
+  let result;
+  if (authMode === 'login') {
+    result = await sb.auth.signInWithPassword({ email, password });
+  } else {
+    result = await sb.auth.signUp({ email, password });
+  }
+
+  if (result.error) {
+    errorDiv.textContent = traducirError(result.error.message);
+    errorDiv.classList.remove('oculto');
+    btn.disabled = false;
+    btn.textContent = authMode === 'login' ? 'Iniciar sesion' : 'Registrarse';
+    return;
+  }
+
+  if (authMode === 'register' && result.data.user && !result.data.session) {
+    errorDiv.textContent = 'Revisa tu email para confirmar la cuenta.';
+    errorDiv.classList.remove('oculto');
+    errorDiv.style.borderColor = 'rgba(59, 130, 246, 0.3)';
+    errorDiv.style.background = 'rgba(59, 130, 246, 0.1)';
+    errorDiv.style.color = '#60a5fa';
+    btn.disabled = false;
+    btn.textContent = 'Registrarse';
+    return;
+  }
+
+  if (result.data.session) {
+    mostrarApp(result.data.session);
+  }
+}
+
+function traducirError(msg) {
+  if (msg.includes('Invalid login')) return 'Email o contrasena incorrectos.';
+  if (msg.includes('already registered')) return 'Este email ya esta registrado. Inicia sesion.';
+  if (msg.includes('valid email')) return 'Ingresa un email valido.';
+  if (msg.includes('at least 6')) return 'La contrasena debe tener al menos 6 caracteres.';
+  return msg;
+}
+
+function toggleAuthMode() {
+  authMode = authMode === 'login' ? 'register' : 'login';
+  document.getElementById('btn-auth').textContent = authMode === 'login' ? 'Iniciar sesion' : 'Registrarse';
+  document.getElementById('auth-toggle-text').textContent = authMode === 'login'
+    ? 'No tenes cuenta? Registrate'
+    : 'Ya tenes cuenta? Inicia sesion';
+  document.getElementById('auth-error').classList.add('oculto');
+}
+
+// --- Mostrar la app despues del login ---
+async function mostrarApp(session) {
+  document.getElementById('auth-screen').classList.add('oculto');
+  document.getElementById('app').classList.remove('oculto');
+  await cargarUsuario();
+}
+
+// --- Obtener token ---
+async function getToken() {
+  const { data: { session } } = await sb.auth.getSession();
+  return session?.access_token;
+}
+
+// --- Fetch autenticado ---
+async function fetchAuth(url, options = {}) {
+  const token = await getToken();
+  return fetch(url, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+      ...(options.headers || {})
+    }
+  });
+}
+
+// --- Cargar usuario ---
 async function cargarUsuario() {
   try {
-    const res = await fetch('/usuario');
+    const res = await fetchAuth('/usuario');
     const data = await res.json();
+    if (data.ok === false) return;
     actualizarUI(data);
   } catch (err) {
     console.error('Error cargando usuario:', err);
   }
 }
 
-// --- Actualizar toda la UI ---
+// --- Actualizar UI ---
 function actualizarUI(data) {
   planActual = data.plan;
   usosActual = data.usosEsteMes;
   limiteActual = data.limiteMensual;
 
-  // Badge del header
   const badge = document.getElementById('plan-badge');
   if (data.plan === 'pro') {
     badge.textContent = 'PRO';
@@ -35,7 +135,6 @@ function actualizarUI(data) {
     badge.style.background = 'rgba(255,255,255,0.15)';
   }
 
-  // Barra de uso
   const label = document.getElementById('uso-label');
   const count = document.getElementById('uso-count');
   const fill = document.getElementById('uso-bar-fill');
@@ -51,16 +150,11 @@ function actualizarUI(data) {
     count.textContent = `${data.usosEsteMes} / ${data.limiteMensual}`;
     fill.style.width = pct + '%';
 
-    if (pct >= 90) {
-      fill.style.background = 'linear-gradient(90deg, #ef4444, #dc2626)';
-    } else if (pct >= 70) {
-      fill.style.background = 'linear-gradient(90deg, #f59e0b, #d97706)';
-    } else {
-      fill.style.background = 'linear-gradient(90deg, #3b82f6, #8b5cf6)';
-    }
+    if (pct >= 90) fill.style.background = 'linear-gradient(90deg, #ef4444, #dc2626)';
+    else if (pct >= 70) fill.style.background = 'linear-gradient(90deg, #f59e0b, #d97706)';
+    else fill.style.background = 'linear-gradient(90deg, #3b82f6, #8b5cf6)';
   }
 
-  // Actualizar cards del modal si esta abierto
   actualizarCardsModal();
 }
 
@@ -84,9 +178,8 @@ async function generar() {
   document.getElementById('btn-generar').disabled = true;
 
   try {
-    const res = await fetch('/generar', {
+    const res = await fetchAuth('/generar', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ mensaje, tono, largo, nombreNegocio, tipoNegocio, palabrasClave })
     });
 
@@ -98,15 +191,10 @@ async function generar() {
     }
 
     mostrarRespuestas(data.respuestas);
-
-    actualizarUI({
-      plan: planActual,
-      usosEsteMes: data.usosEsteMes,
-      limiteMensual: data.limiteMensual
-    });
+    actualizarUI({ plan: planActual, usosEsteMes: data.usosEsteMes, limiteMensual: data.limiteMensual });
 
   } catch (err) {
-    mostrarError('Error de conexion. Revisa que el servidor este corriendo.');
+    mostrarError('Error de conexion. Intenta de nuevo.');
   } finally {
     document.getElementById('loading').classList.add('oculto');
     document.getElementById('btn-generar').disabled = false;
@@ -143,33 +231,14 @@ function mostrarRespuestas(respuestas) {
 // --- Copiar ---
 async function copiar(btn, index) {
   const texto = document.querySelectorAll('.respuesta-texto')[index].textContent;
-
-  try {
-    await navigator.clipboard.writeText(texto);
-  } catch (err) {
-    const ta = document.createElement('textarea');
-    ta.value = texto;
-    document.body.appendChild(ta);
-    ta.select();
-    document.execCommand('copy');
-    document.body.removeChild(ta);
+  try { await navigator.clipboard.writeText(texto); } catch (err) {
+    const ta = document.createElement('textarea'); ta.value = texto;
+    document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
   }
-
-  btn.innerHTML = `
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
-      <path d="M20 6L9 17l-5-5"></path>
-    </svg>
-    Copiado!
-  `;
+  btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M20 6L9 17l-5-5"></path></svg> Copiado!`;
   btn.classList.add('copiado');
   setTimeout(() => {
-    btn.innerHTML = `
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
-        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-      </svg>
-      Copiar
-    `;
+    btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> Copiar`;
     btn.classList.remove('copiado');
   }, 2000);
 }
@@ -193,9 +262,7 @@ function cerrarPlanes() {
   document.body.style.overflow = '';
 }
 
-function cerrarPlanesOverlay(e) {
-  if (e.target === e.currentTarget) cerrarPlanes();
-}
+function cerrarPlanesOverlay(e) { if (e.target === e.currentTarget) cerrarPlanes(); }
 
 function actualizarCardsModal() {
   const cards = {
@@ -203,19 +270,12 @@ function actualizarCardsModal() {
     basico: document.getElementById('card-basico'),
     pro: document.getElementById('card-pro')
   };
-
   if (!cards.gratis || !cards.basico || !cards.pro) return;
 
-  const labels = {
-    gratis: 'Seleccionar Gratis',
-    basico: 'Seleccionar Basico',
-    pro: 'Seleccionar Pro'
-  };
-
+  const labels = { gratis: 'Seleccionar Gratis', basico: 'Seleccionar Basico', pro: 'Seleccionar Pro' };
   for (const [plan, card] of Object.entries(cards)) {
     const btn = card.querySelector('.plan-btn');
     card.classList.toggle('activo', planActual === plan);
-
     if (planActual === plan) {
       btn.textContent = 'Plan actual';
       btn.classList.add('plan-activo-btn');
@@ -228,15 +288,12 @@ function actualizarCardsModal() {
 
 async function seleccionarPlan(plan) {
   if (plan === planActual) return;
-
   try {
-    const res = await fetch('/cambiar-plan', {
+    const res = await fetchAuth('/cambiar-plan', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ plan })
     });
     const data = await res.json();
-
     if (data.ok) {
       actualizarUI({
         plan: data.plan,
@@ -244,12 +301,17 @@ async function seleccionarPlan(plan) {
         limiteMensual: data.limiteMensual
       });
     }
-  } catch (err) {
-    mostrarError('Error al cambiar el plan.');
-  }
+  } catch (err) { mostrarError('Error al cambiar el plan.'); }
 }
 
-// --- Cerrar modal con Escape ---
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') cerrarPlanes();
-});
+// --- Logout ---
+async function logout() {
+  await sb.auth.signOut();
+  document.getElementById('app').classList.add('oculto');
+  document.getElementById('auth-screen').classList.remove('oculto');
+  document.getElementById('auth-email').value = '';
+  document.getElementById('auth-password').value = '';
+}
+
+// --- Escape para cerrar modal ---
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') cerrarPlanes(); });
