@@ -206,6 +206,11 @@ app.post('/generar', authMiddleware, async (req, res) => {
     return res.status(400).json({ ok: false, error: 'El mensaje y el tono son obligatorios.' });
   }
 
+  // Filtro de contenido inapropiado
+  if (filtroContenido(mensaje) || filtroContenido(palabrasClave || '')) {
+    return res.status(400).json({ ok: false, error: 'El mensaje contiene contenido no permitido. Esta herramienta es solo para respuestas de ventas.' });
+  }
+
   const perfil = await obtenerPerfil(req.user.id);
   const planInfo = PLANES[perfil.plan] || PLANES.gratis;
 
@@ -304,6 +309,20 @@ async function obtenerPerfil(userId) {
   }
 
   return data;
+}
+
+// --- Filtro de contenido inapropiado ---
+function filtroContenido(texto) {
+  const prohibido = [
+    'bomba', 'explosivo', 'arma', 'droga', 'matar', 'asesinar', 'suicid',
+    'terroris', 'hackear', 'robar', 'estafa', 'ilegal', 'narco',
+    'pornograf', 'sexual', 'menor', 'pedof', 'violacion', 'violar',
+    'lavado de dinero', 'falsific', 'secuestr', 'extorsion', 'amenaz',
+    'veneno', 'cianuro', 'rifle', 'pistola', 'municion', 'cocaina',
+    'marihuana', 'metanfetamina', 'heroina', 'trafico'
+  ];
+  const lower = texto.toLowerCase();
+  return prohibido.some(p => lower.includes(p));
 }
 
 // --- Generador de respuestas con DeepSeek ---
