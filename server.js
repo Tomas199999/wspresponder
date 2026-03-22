@@ -149,6 +149,11 @@ Responde SOLO con las 3 respuestas separadas por ||| sin nada mas.`;
   return respuestas.slice(0, 3);
 }
 
-app.listen(PORT, () => {
-  console.log(`WspResponder corriendo en http://localhost:${PORT}`);
-});
+// Local development
+if (process.env.NODE_ENV !== 'production') {
+  app.listen(PORT, () => {
+    console.log(`WspResponder corriendo en http://localhost:${PORT}`);
+  });
+}
+
+module.exports = app;
