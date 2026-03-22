@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WspResponder - Respuestas de ventas para WhatsApp</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="header-content">
+      <h1 class="logo">
+        <svg class="logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+        </svg>
+        Wsp<span>Responder</span>
+      </h1>
+      <nav class="header-nav">
+        <button class="nav-btn" onclick="abrirPlanes()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
+          </svg>
+          Planes
+        </button>
+        <div id="plan-badge" class="plan-badge"></div>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- Barra de uso -->
+    <section id="uso-bar-section" class="uso-bar-section">
+      <div class="uso-bar-container">
+        <div class="uso-bar-info">
+          <span id="uso-label" class="uso-label"></span>
+          <span id="uso-count" class="uso-count"></span>
+        </div>
+        <div class="uso-bar-track">
+          <div id="uso-bar-fill" class="uso-bar-fill"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Formulario -->
+    <section class="formulario">
+      <div class="form-header">
+        <h2>Genera respuestas de venta</h2>
+        <p class="subtitulo">Pega el mensaje de tu cliente y obtene 3 respuestas listas para enviar</p>
+      </div>
+
+      <div class="campo">
+        <label for="mensaje">Mensaje del cliente</label>
+        <textarea id="mensaje" rows="4" placeholder="Ej: Hola, queria saber el precio del corte de pelo..."></textarea>
+      </div>
+
+      <div class="fila fila-2">
+        <div class="campo">
+          <label for="tono">Tono</label>
+          <select id="tono">
+            <option value="amable">Amable</option>
+            <option value="vendedor">Vendedor</option>
+            <option value="profesional">Profesional</option>
+            <option value="directo">Directo</option>
+          </select>
+        </div>
+        <div class="campo">
+          <label for="largo">Largo</label>
+          <select id="largo">
+            <option value="corta">Corta</option>
+            <option value="media" selected>Media</option>
+            <option value="larga">Larga</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="fila fila-2">
+        <div class="campo">
+          <label for="nombre-negocio">Nombre del negocio <span class="opcional">(opcional)</span></label>
+          <input type="text" id="nombre-negocio" placeholder="Ej: La Katana, Don Carlos...">
+        </div>
+        <div class="campo">
+          <label for="tipo-negocio">Tipo de negocio <span class="opcional">(opcional)</span></label>
+          <input type="text" id="tipo-negocio" placeholder="Ej: barberia, gym, sushi...">
+        </div>
+      </div>
+
+      <div class="campo">
+        <label for="palabras-clave">Palabras clave para incluir <span class="opcional">(opcional)</span></label>
+        <input type="text" id="palabras-clave" placeholder="Ej: promo, descuento, nuevo, exclusivo, envio gratis...">
+        <span class="campo-hint">Separa las palabras con comas. Se van a incluir naturalmente en las respuestas.</span>
+      </div>
+
+      <button id="btn-generar" class="btn-generar" onclick="generar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+          <path d="M22 2L11 13"></path>
+          <path d="M22 2l-7 20-4-9-9-4 20-7z"></path>
+        </svg>
+        Generar respuestas
+      </button>
+    </section>
+
+    <!-- Loading -->
+    <div id="loading" class="loading oculto">
+      <div class="spinner"></div>
+      <p>Generando respuestas...</p>
+    </div>
+
+    <!-- Error -->
+    <div id="error" class="error oculto"></div>
+
+    <!-- Respuestas -->
+    <section id="respuestas" class="respuestas oculto">
+      <h3>Tus respuestas</h3>
+      <div id="lista-respuestas"></div>
+    </section>
+
+  </main>
+
+  <!-- Modal de planes -->
+  <div id="modal-planes" class="modal-overlay oculto" onclick="cerrarPlanesOverlay(event)">
+    <div class="modal">
+      <button class="modal-cerrar" onclick="cerrarPlanes()">&times;</button>
+      <h2 class="modal-titulo">Elegi tu plan</h2>
+      <p class="modal-subtitulo">Selecciona el plan que mejor se adapte a tu negocio</p>
+
+      <div class="planes-grid planes-grid-3">
+        <!-- Plan Gratis -->
+        <div id="card-gratis" class="plan-card-modal">
+          <div class="plan-card-header">
+            <span class="plan-tag">Gratis</span>
+            <div class="plan-precio">$0<span>/mes</span></div>
+          </div>
+          <ul class="plan-features">
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="3" width="16" height="16"><path d="M20 6L9 17l-5-5"></path></svg>
+              5 respuestas por mes
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="3" width="16" height="16"><path d="M20 6L9 17l-5-5"></path></svg>
+              4 tonos disponibles
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="3" width="16" height="16"><path d="M20 6L9 17l-5-5"></path></svg>
+              3 largos de mensaje
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="3" width="16" height="16"><path d="M20 6L9 17l-5-5"></path></svg>
+              Copiar respuestas
+            </li>
+          </ul>
+          <button class="plan-btn gratis-btn" onclick="seleccionarPlan('gratis')">Seleccionar Gratis</button>
+        </div>
+
+        <!-- Plan Basico -->
+        <div id="card-basico" class="plan-card-modal">
+          <div class="plan-card-header">
+            <span class="plan-tag">Basico</span>
+            <div class="plan-precio">$4.990<span>/mes</span></div>
+          </div>
+          <ul class="plan-features">
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="3" width="16" height="16"><path d="M20 6L9 17l-5-5"></path></svg>
+              50 respuestas por mes
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="3" width="16" height="16"><path d="M20 6L9 17l-5-5"></path></svg>
+              4 tonos disponibles
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="3" width="16" height="16"><path d="M20 6L9 17l-5-5"></path></svg>
+              3 largos de mensaje
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="3" width="16" height="16"><path d="M20 6L9 17l-5-5"></path></svg>
+              Copiar respuestas
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="3" width="16" height="16"><path d="M20 6L9 17l-5-5"></path></svg>
+              Palabras clave
+            </li>
+          </ul>
+          <button class="plan-btn basico-btn" onclick="seleccionarPlan('basico')">Seleccionar Basico</button>
+        </div>
+
+        <!-- Plan Pro -->
+        <div id="card-pro" class="plan-card-modal pro-destacado">
+          <div class="plan-popular">Mas popular</div>
+          <div class="plan-card-header pro-header">
+            <span class="plan-tag">Pro</span>
+            <div class="plan-precio">$9.990<span>/mes</span></div>
+          </div>
+          <ul class="plan-features">
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3" width="16" height="16"><path d="M20 6L9 17l-5-5"></path></svg>
+              Respuestas ilimitadas
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3" width="16" height="16"><path d="M20 6L9 17l-5-5"></path></svg>
+              4 tonos disponibles
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3" width="16" height="16"><path d="M20 6L9 17l-5-5"></path></svg>
+              3 largos de mensaje
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3" width="16" height="16"><path d="M20 6L9 17l-5-5"></path></svg>
+              Copiar respuestas
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3" width="16" height="16"><path d="M20 6L9 17l-5-5"></path></svg>
+              Palabras clave
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3" width="16" height="16"><path d="M20 6L9 17l-5-5"></path></svg>
+              Soporte prioritario
+            </li>
+          </ul>
+          <button class="plan-btn pro-btn" onclick="seleccionarPlan('pro')">Seleccionar Pro</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <p>WspResponder &mdash; Respuestas inteligentes para vender mas por WhatsApp</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
