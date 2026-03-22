@@ -131,6 +131,7 @@ app.post('/generar', authMiddleware, async (req, res) => {
     res.json({
       ok: true,
       respuestas,
+      plan: perfil.plan,
       usosEsteMes: perfil.usos_este_mes + 1,
       limiteMensual: planInfo.limiteMensual
     });

@@ -154,7 +154,7 @@ async function generar() {
     }
 
     mostrarRespuestas(data.respuestas);
-    actualizarUI({ plan: planActual, usosEsteMes: data.usosEsteMes, limiteMensual: data.limiteMensual });
+    actualizarUI({ plan: data.plan, usosEsteMes: data.usosEsteMes, limiteMensual: data.limiteMensual });
 
   } catch (err) {
     mostrarError('Error de conexion. Intenta de nuevo.');
