@@ -87,7 +87,7 @@ app.post('/suscribir', authMiddleware, async (req, res) => {
         preapproval_plan_id: MP_PLANES[plan],
         external_reference: `${req.user.id}|${plan}`,
         payer_email: perfil.email,
-        back_url: 'https://wspresponder.vercel.app',
+        back_url: 'https://wspresponder.vercel.app/?from=mp',
         status: 'pending'
       })
     });

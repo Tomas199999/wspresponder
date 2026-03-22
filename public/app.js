@@ -14,7 +14,17 @@ document.addEventListener('DOMContentLoaded', async () => {
   const { data: { session } } = await sb.auth.getSession();
   if (session) {
     document.getElementById('landing').classList.add('oculto');
-    mostrarApp(session);
+    await mostrarApp(session);
+
+    // Si viene de Mercado Pago, verificar plan actualizado
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('from') === 'mp' || urlParams.get('preapproval_id') || document.referrer.includes('mercadopago')) {
+      // Limpiar URL
+      window.history.replaceState({}, '', '/');
+      // Esperar un poco y recargar datos del usuario (el webhook puede tardar)
+      setTimeout(() => cargarUsuario(), 3000);
+      setTimeout(() => cargarUsuario(), 8000);
+    }
   } else {
     document.getElementById('landing').classList.remove('oculto');
   }
