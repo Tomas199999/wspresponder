@@ -89,18 +89,27 @@
   transform: none;
 }
 
-.auth-toggle {
-  background: none;
-  border: none;
-  color: #3b82f6;
-  font-size: 0.85rem;
+.btn-google {
+  width: 100%;
+  padding: 12px;
+  background: #fff;
+  color: #333;
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-weight: 600;
   cursor: pointer;
-  margin-top: 18px;
-  transition: color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: all 0.2s;
 }
 
-.auth-toggle:hover {
-  color: #60a5fa;
+.btn-google:hover {
+  background: #f0f0f0;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 15px rgba(255,255,255,0.1);
 }
 
 .auth-error {

@@ -19,64 +19,20 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 });
 
-// --- Auth: login o registro ---
-async function handleAuth(e) {
-  e.preventDefault();
-  const email = document.getElementById('auth-email').value.trim();
-  const password = document.getElementById('auth-password').value;
-  const btn = document.getElementById('btn-auth');
-  const errorDiv = document.getElementById('auth-error');
+// --- Auth: login con Google ---
+async function loginConGoogle() {
+  const { error } = await sb.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      redirectTo: window.location.origin
+    }
+  });
 
-  errorDiv.classList.add('oculto');
-  btn.disabled = true;
-  btn.textContent = authMode === 'login' ? 'Iniciando...' : 'Registrando...';
-
-  let result;
-  if (authMode === 'login') {
-    result = await sb.auth.signInWithPassword({ email, password });
-  } else {
-    result = await sb.auth.signUp({ email, password });
-  }
-
-  if (result.error) {
-    errorDiv.textContent = traducirError(result.error.message);
+  if (error) {
+    const errorDiv = document.getElementById('auth-error');
+    errorDiv.textContent = 'Error al conectar con Google. Intenta de nuevo.';
     errorDiv.classList.remove('oculto');
-    btn.disabled = false;
-    btn.textContent = authMode === 'login' ? 'Iniciar sesion' : 'Registrarse';
-    return;
   }
-
-  if (authMode === 'register' && result.data.user && !result.data.session) {
-    errorDiv.textContent = 'Revisa tu email para confirmar la cuenta.';
-    errorDiv.classList.remove('oculto');
-    errorDiv.style.borderColor = 'rgba(59, 130, 246, 0.3)';
-    errorDiv.style.background = 'rgba(59, 130, 246, 0.1)';
-    errorDiv.style.color = '#60a5fa';
-    btn.disabled = false;
-    btn.textContent = 'Registrarse';
-    return;
-  }
-
-  if (result.data.session) {
-    mostrarApp(result.data.session);
-  }
-}
-
-function traducirError(msg) {
-  if (msg.includes('Invalid login')) return 'Email o contrasena incorrectos.';
-  if (msg.includes('already registered')) return 'Este email ya esta registrado. Inicia sesion.';
-  if (msg.includes('valid email')) return 'Ingresa un email valido.';
-  if (msg.includes('at least 6')) return 'La contrasena debe tener al menos 6 caracteres.';
-  return msg;
-}
-
-function toggleAuthMode() {
-  authMode = authMode === 'login' ? 'register' : 'login';
-  document.getElementById('btn-auth').textContent = authMode === 'login' ? 'Iniciar sesion' : 'Registrarse';
-  document.getElementById('auth-toggle-text').textContent = authMode === 'login'
-    ? 'No tenes cuenta? Registrate'
-    : 'Ya tenes cuenta? Inicia sesion';
-  document.getElementById('auth-error').classList.add('oculto');
 }
 
 // --- Mostrar la app despues del login ---
