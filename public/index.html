@@ -8,8 +8,150 @@
 </head>
 <body>
 
+  <!-- Landing Page -->
+  <div id="landing" class="landing">
+    <!-- Landing Header -->
+    <nav class="landing-nav">
+      <h1 class="logo">
+        <svg class="logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+        </svg>
+        Mensaje<span>AI</span>
+      </h1>
+      <button class="landing-cta-sm" onclick="irALogin()">Iniciar sesion</button>
+    </nav>
+
+    <!-- Hero -->
+    <section class="hero">
+      <div class="hero-badge">Potenciado por inteligencia artificial</div>
+      <h2>Responde a tus clientes<br><span class="hero-gradient">como un experto en ventas</span></h2>
+      <p class="hero-sub">Pega el mensaje de tu cliente y genera respuestas persuasivas, naturales y listas para enviar. En segundos.</p>
+      <div class="hero-btns">
+        <button class="btn-hero-primary" onclick="irALogin()">Empezar gratis</button>
+        <a href="#como-funciona" class="btn-hero-secondary">Como funciona</a>
+      </div>
+      <p class="hero-note">Sin tarjeta de credito. 5 respuestas gratis por mes.</p>
+    </section>
+
+    <!-- Como funciona -->
+    <section id="como-funciona" class="landing-section">
+      <h3 class="section-titulo">Como funciona</h3>
+      <p class="section-sub">3 pasos simples para responder como un profesional</p>
+      <div class="pasos-grid">
+        <div class="paso-card">
+          <div class="paso-numero">1</div>
+          <h4>Pega el mensaje</h4>
+          <p>Copia el mensaje que te mando tu cliente por WhatsApp, Instagram o donde sea.</p>
+        </div>
+        <div class="paso-card">
+          <div class="paso-numero">2</div>
+          <h4>Configura el tono</h4>
+          <p>Elegi entre amable, vendedor, profesional o directo. Ajusta el largo y agrega palabras clave.</p>
+        </div>
+        <div class="paso-card">
+          <div class="paso-numero">3</div>
+          <h4>Envia la respuesta</h4>
+          <p>Recibis 3 respuestas listas para copiar y pegar. Cada una pensada para cerrar la venta.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Features -->
+    <section class="landing-section">
+      <h3 class="section-titulo">Todo lo que necesitas</h3>
+      <p class="section-sub">Herramientas pensadas para vender mas</p>
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg>
+          </div>
+          <h4>4 tonos de voz</h4>
+          <p>Amable, vendedor, profesional o directo. Adaptate a cada cliente.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24"><path d="M4 7V4h16v3M9 20h6M12 4v16"></path></svg>
+          </div>
+          <h4>Largo ajustable</h4>
+          <p>Respuestas cortas, medias o largas segun lo que necesites.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>
+          </div>
+          <h4>Palabras clave</h4>
+          <p>Incluye promos, descuentos o lo que quieras en las respuestas automaticamente.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"></path></svg>
+          </div>
+          <h4>Copiar y pegar</h4>
+          <p>Un click y la respuesta esta en tu portapapeles lista para enviar.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Planes -->
+    <section id="planes" class="landing-section">
+      <h3 class="section-titulo">Planes simples, sin letra chica</h3>
+      <p class="section-sub">Empeza gratis y mejora cuando quieras</p>
+      <div class="landing-planes-grid">
+        <div class="landing-plan-card">
+          <span class="landing-plan-tag">Gratis</span>
+          <div class="landing-plan-precio">$0<span>/mes</span></div>
+          <ul>
+            <li>5 respuestas por mes</li>
+            <li>4 tonos de voz</li>
+            <li>3 largos de mensaje</li>
+            <li>Copiar respuestas</li>
+          </ul>
+          <button class="btn-landing-plan" onclick="irALogin()">Empezar gratis</button>
+        </div>
+        <div class="landing-plan-card landing-plan-destacado">
+          <div class="landing-plan-popular">Mas popular</div>
+          <span class="landing-plan-tag">Basico</span>
+          <div class="landing-plan-precio">$4.990<span>/mes</span></div>
+          <ul>
+            <li>50 respuestas por mes</li>
+            <li>4 tonos de voz</li>
+            <li>3 largos de mensaje</li>
+            <li>Copiar respuestas</li>
+            <li>Palabras clave</li>
+          </ul>
+          <button class="btn-landing-plan btn-landing-plan-primary" onclick="irALogin()">Elegir Basico</button>
+        </div>
+        <div class="landing-plan-card">
+          <span class="landing-plan-tag">Pro</span>
+          <div class="landing-plan-precio">$9.990<span>/mes</span></div>
+          <ul>
+            <li>Respuestas ilimitadas</li>
+            <li>4 tonos de voz</li>
+            <li>3 largos de mensaje</li>
+            <li>Copiar respuestas</li>
+            <li>Palabras clave</li>
+            <li>Soporte prioritario</li>
+          </ul>
+          <button class="btn-landing-plan" onclick="irALogin()">Elegir Pro</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA final -->
+    <section class="landing-cta-section">
+      <h3>Listo para vender mas?</h3>
+      <p>Unite a MensajeAI y empeza a generar respuestas que cierran ventas.</p>
+      <button class="btn-hero-primary" onclick="irALogin()">Empezar gratis ahora</button>
+    </section>
+
+    <!-- Footer landing -->
+    <footer class="landing-footer">
+      <p>MensajeAI &mdash; Respuestas inteligentes para vender mas</p>
+    </footer>
+  </div>
+
   <!-- Pantalla de Auth -->
-  <div id="auth-screen" class="auth-screen">
+  <div id="auth-screen" class="auth-screen oculto">
     <div class="auth-card">
       <h1 class="logo auth-logo">
         <svg class="logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

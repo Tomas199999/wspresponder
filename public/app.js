@@ -13,11 +13,18 @@ let authMode = 'login'; // 'login' o 'register'
 document.addEventListener('DOMContentLoaded', async () => {
   const { data: { session } } = await sb.auth.getSession();
   if (session) {
+    document.getElementById('landing').classList.add('oculto');
     mostrarApp(session);
   } else {
-    document.getElementById('auth-screen').classList.remove('oculto');
+    document.getElementById('landing').classList.remove('oculto');
   }
 });
+
+// --- Ir al login desde la landing ---
+function irALogin() {
+  document.getElementById('landing').classList.add('oculto');
+  document.getElementById('auth-screen').classList.remove('oculto');
+}
 
 // --- Auth: login con Google ---
 async function loginConGoogle() {
@@ -264,9 +271,7 @@ async function seleccionarPlan(plan) {
 async function logout() {
   await sb.auth.signOut();
   document.getElementById('app').classList.add('oculto');
-  document.getElementById('auth-screen').classList.remove('oculto');
-  document.getElementById('auth-email').value = '';
-  document.getElementById('auth-password').value = '';
+  document.getElementById('landing').classList.remove('oculto');
 }
 
 // --- Escape para cerrar modal ---
