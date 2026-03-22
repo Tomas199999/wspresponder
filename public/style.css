@@ -594,8 +594,11 @@ header {
 .logo-img {
   width: 28px;
   height: 28px;
+  max-width: 28px;
+  max-height: 28px;
   border-radius: 6px;
   object-fit: contain;
+  flex-shrink: 0;
 }
 
 .logo span {
