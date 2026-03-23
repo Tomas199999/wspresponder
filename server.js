@@ -200,7 +200,7 @@ app.post('/cambiar-plan', authMiddleware, async (req, res) => {
 
 // --- Endpoint: generar respuestas ---
 app.post('/generar', authMiddleware, async (req, res) => {
-  const { mensaje, tono, nombreNegocio, tipoNegocio, largo, palabrasClave } = req.body;
+  const { mensaje, tono, nombreNegocio, tipoNegocio, largo, palabrasClave, idioma } = req.body;
 
   if (!mensaje || !tono) {
     return res.status(400).json({ ok: false, error: 'El mensaje y el tono son obligatorios.' });
@@ -222,7 +222,7 @@ app.post('/generar', authMiddleware, async (req, res) => {
   }
 
   try {
-    const respuestas = await generarConIA(mensaje, tono, nombreNegocio, tipoNegocio, largo || 'media', palabrasClave);
+    const respuestas = await generarConIA(mensaje, tono, nombreNegocio, tipoNegocio, largo || 'media', palabrasClave, idioma);
 
     // Incrementar usos en la base de datos
     await supabase
@@ -326,7 +326,7 @@ function filtroContenido(texto) {
 }
 
 // --- Generador de respuestas con DeepSeek ---
-async function generarConIA(mensaje, tono, nombreNegocio, tipoNegocio, largo, palabrasClave) {
+async function generarConIA(mensaje, tono, nombreNegocio, tipoNegocio, largo, palabrasClave, idioma) {
   let negocioTexto = '';
   if (nombreNegocio && tipoNegocio) {
     negocioTexto = `El negocio se llama "${nombreNegocio}" y es un/a ${tipoNegocio}.`;
@@ -347,10 +347,21 @@ async function generarConIA(mensaje, tono, nombreNegocio, tipoNegocio, largo, pa
     keywordsTexto = `\nIMPORTANTE: Incluir naturalmente estas palabras o conceptos en las respuestas: ${palabrasClave}`;
   }
 
-  const prompt = `Actua como un experto en ventas por WhatsApp en Argentina.
+  const idiomas = {
+    espanol_argentino: 'Responde en español argentino (voseo, modismos argentinos).',
+    espanol: 'Responde en español neutro.',
+    portugues: 'Responde en portugués brasileño.',
+    ingles: 'Responde en inglés.',
+    italiano: 'Responde en italiano.',
+    frances: 'Responde en francés.'
+  };
+  const idiomaTexto = idiomas[idioma] || idiomas.espanol_argentino;
+
+  const prompt = `Actua como un experto en ventas por mensajeria.
 Genera exactamente 3 respuestas diferentes para responder al mensaje de un cliente.
 
 REGLAS:
+- ${idiomaTexto}
 - Las respuestas deben ser naturales, humanas y persuasivas.
 - Usa tono ${tono}.
 - ${largos[largo] || largos.media}

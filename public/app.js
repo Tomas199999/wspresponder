@@ -136,6 +136,7 @@ async function generar() {
   const nombreNegocio = document.getElementById('nombre-negocio').value.trim();
   const tipoNegocio = document.getElementById('tipo-negocio').value.trim();
   const palabrasClave = document.getElementById('palabras-clave').value.trim();
+  const idioma = document.getElementById('idioma').value;
 
   if (!mensaje) {
     mostrarError('Escribi o pega el mensaje del cliente antes de generar.');
@@ -150,7 +151,7 @@ async function generar() {
   try {
     const res = await fetchAuth('/generar', {
       method: 'POST',
-      body: JSON.stringify({ mensaje, tono, largo, nombreNegocio, tipoNegocio, palabrasClave })
+      body: JSON.stringify({ mensaje, tono, largo, nombreNegocio, tipoNegocio, palabrasClave, idioma })
     });
 
     const data = await res.json();
@@ -183,19 +184,37 @@ function mostrarRespuestas(respuestas) {
       <div class="respuesta-numero">${i + 1}</div>
       <div class="respuesta-contenido">
         <p class="respuesta-texto">${texto}</p>
-        <button class="btn-copiar" onclick="copiar(this, ${i})">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
-            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-          </svg>
-          Copiar
-        </button>
+        <div class="respuesta-btns">
+          <button class="btn-copiar" onclick="copiar(this, ${i})">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+            </svg>
+            Copiar
+          </button>
+          <button class="btn-wsp" onclick="enviarWhatsApp(${i})">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.625.846 5.059 2.284 7.034L.789 23.492l4.638-1.522A11.953 11.953 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.75c-2.14 0-4.144-.67-5.804-1.823l-.416-.27-2.75.903.879-2.682-.293-.437A9.725 9.725 0 012.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75z"/></svg>
+            WhatsApp
+          </button>
+        </div>
       </div>
     `;
     contenedor.appendChild(card);
   });
 
   document.getElementById('respuestas').classList.remove('oculto');
+}
+
+// --- Enviar por WhatsApp ---
+function enviarWhatsApp(index) {
+  const texto = document.querySelectorAll('.respuesta-texto')[index].textContent;
+  const url = `https://wa.me/?text=${encodeURIComponent(texto)}`;
+  window.open(url, '_blank');
+}
+
+// --- Enviar por WhatsApp desde historial ---
+function enviarWhatsAppTexto(texto) {
+  window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`, '_blank');
 }
 
 // --- Copiar ---
@@ -377,13 +396,19 @@ function crearCardHistorial(item) {
         <div class="respuesta-numero">${i + 1}</div>
         <div class="respuesta-contenido">
           <p class="respuesta-texto">${escapeHTML(resp)}</p>
-          <button class="btn-copiar" onclick="copiarTexto(this, '${escapeHTML(resp).replace(/'/g, "\\'")}')">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
-              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-            </svg>
-            Copiar
-          </button>
+          <div class="respuesta-btns">
+            <button class="btn-copiar" onclick="copiarTexto(this, '${escapeHTML(resp).replace(/'/g, "\\'")}')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+              </svg>
+              Copiar
+            </button>
+            <button class="btn-wsp" onclick="enviarWhatsAppTexto('${escapeHTML(resp).replace(/'/g, "\\'")}')">
+              <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.625.846 5.059 2.284 7.034L.789 23.492l4.638-1.522A11.953 11.953 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.75c-2.14 0-4.144-.67-5.804-1.823l-.416-.27-2.75.903.879-2.682-.293-.437A9.725 9.725 0 012.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75z"/></svg>
+              WhatsApp
+            </button>
+          </div>
         </div>
       </div>`;
   });
@@ -444,14 +469,18 @@ async function eliminarHistorial(id) {
   }
 }
 
-// --- Filtrar historial por busqueda ---
+// --- Filtrar historial por busqueda y categoria ---
 function filtrarHistorial() {
   const query = document.getElementById('historial-search').value.toLowerCase();
+  const tonoFiltro = document.getElementById('historial-filtro-tono').value.toLowerCase();
   const cards = document.querySelectorAll('.historial-card');
 
   cards.forEach(card => {
     const texto = card.textContent.toLowerCase();
-    card.style.display = texto.includes(query) ? '' : 'none';
+    const tags = card.querySelector('.historial-tags')?.textContent.toLowerCase() || '';
+    const matchTexto = !query || texto.includes(query);
+    const matchTono = !tonoFiltro || tags.includes(tonoFiltro);
+    card.style.display = (matchTexto && matchTono) ? '' : 'none';
   });
 }
 

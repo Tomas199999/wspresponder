@@ -234,7 +234,7 @@
           <textarea id="mensaje" rows="4" placeholder="Ej: Hola, queria saber el precio del corte de pelo..."></textarea>
         </div>
 
-        <div class="fila fila-2">
+        <div class="fila fila-3">
           <div class="campo">
             <label for="tono">Tono</label>
             <select id="tono">
@@ -250,6 +250,17 @@
               <option value="corta">Corta</option>
               <option value="media" selected>Media</option>
               <option value="larga">Larga</option>
+            </select>
+          </div>
+          <div class="campo">
+            <label for="idioma">Idioma</label>
+            <select id="idioma">
+              <option value="espanol_argentino" selected>Espanol (Argentina)</option>
+              <option value="espanol">Espanol (neutro)</option>
+              <option value="portugues">Portugues</option>
+              <option value="ingles">Ingles</option>
+              <option value="italiano">Italiano</option>
+              <option value="frances">Frances</option>
             </select>
           </div>
         </div>
@@ -301,8 +312,15 @@
           <h3>Historial de respuestas</h3>
           <button class="btn-cerrar-historial" onclick="cerrarHistorial()">Volver al generador</button>
         </div>
-        <div class="historial-buscar">
+        <div class="historial-filtros">
           <input type="text" id="historial-search" placeholder="Buscar en el historial..." oninput="filtrarHistorial()">
+          <select id="historial-filtro-tono" onchange="filtrarHistorial()">
+            <option value="">Todos los tonos</option>
+            <option value="amable">Amable</option>
+            <option value="vendedor">Vendedor</option>
+            <option value="profesional">Profesional</option>
+            <option value="directo">Directo</option>
+          </select>
         </div>
         <div id="historial-loading" class="loading oculto">
           <div class="spinner"></div>

@@ -798,6 +798,12 @@ main {
   gap: 14px;
 }
 
+.fila-3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 14px;
+}
+
 .btn-generar {
   width: 100%;
   padding: 13px;
@@ -954,6 +960,30 @@ main {
   background: #3b82f6;
   color: #fff;
   border-color: #3b82f6;
+}
+
+.respuesta-btns {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-wsp {
+  background: rgba(37, 211, 102, 0.1);
+  border: 1px solid rgba(37, 211, 102, 0.25);
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  cursor: pointer;
+  color: #25d366;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.btn-wsp:hover {
+  background: rgba(37, 211, 102, 0.2);
+  border-color: #25d366;
 }
 
 /* --- Modal overlay --- */
@@ -1219,11 +1249,32 @@ footer {
   color: #fff;
 }
 
-.historial-buscar {
+.historial-filtros {
+  display: flex;
+  gap: 10px;
   margin-bottom: 16px;
 }
 
-.historial-buscar input {
+.historial-filtros input {
+  flex: 1;
+}
+
+.historial-filtros select {
+  padding: 10px 14px;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-family: inherit;
+  background: rgba(255,255,255,0.04);
+  color: #e5e5e5;
+  cursor: pointer;
+}
+
+.historial-filtros select option {
+  background: #1a1a1a;
+}
+
+.historial-filtros input {
   width: 100%;
   padding: 10px 14px;
   border: 1px solid rgba(255,255,255,0.1);
@@ -1350,7 +1401,8 @@ footer {
 
 /* --- Responsive --- */
 @media (max-width: 640px) {
-  .fila-2 {
+  .fila-2,
+  .fila-3 {
     grid-template-columns: 1fr;
   }
 
