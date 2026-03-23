@@ -55,6 +55,7 @@ app.get('/usuario', authMiddleware, async (req, res) => {
   }
 
   const planInfo = PLANES[perfil.plan] || PLANES.gratis;
+  res.set('Cache-Control', 'no-store');
   res.json({
     email: perfil.email,
     plan: perfil.plan,

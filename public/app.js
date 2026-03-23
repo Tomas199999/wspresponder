@@ -78,7 +78,17 @@ async function fetchAuth(url, options = {}) {
 // --- Cargar usuario ---
 async function cargarUsuario() {
   try {
-    const res = await fetchAuth(`/usuario?t=${Date.now()}`);
+    // Refrescar sesion antes de cargar
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) return;
+
+    const res = await fetch(`/usuario?t=${Date.now()}`, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session.access_token}`,
+        'Cache-Control': 'no-cache'
+      }
+    });
     const data = await res.json();
     if (data.ok === false) return;
     actualizarUI(data);
