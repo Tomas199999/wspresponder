@@ -298,6 +298,9 @@ async function obtenerPerfil(userId) {
 
   if (error || !data) return null;
 
+  // Limpiar espacios en el plan
+  data.plan = (data.plan || 'gratis').trim();
+
   // Reset mensual: si cambio el mes, reiniciar contador
   const mesActual = new Date().toISOString().slice(0, 7); // '2026-03'
   if (data.mes_actual !== mesActual) {
