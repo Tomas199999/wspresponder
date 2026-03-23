@@ -301,6 +301,9 @@
           <h3>Historial de respuestas</h3>
           <button class="btn-cerrar-historial" onclick="cerrarHistorial()">Volver al generador</button>
         </div>
+        <div class="historial-buscar">
+          <input type="text" id="historial-search" placeholder="Buscar en el historial..." oninput="filtrarHistorial()">
+        </div>
         <div id="historial-loading" class="loading oculto">
           <div class="spinner"></div>
           <p>Cargando historial...</p>

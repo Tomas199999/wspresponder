@@ -444,6 +444,17 @@ async function eliminarHistorial(id) {
   }
 }
 
+// --- Filtrar historial por busqueda ---
+function filtrarHistorial() {
+  const query = document.getElementById('historial-search').value.toLowerCase();
+  const cards = document.querySelectorAll('.historial-card');
+
+  cards.forEach(card => {
+    const texto = card.textContent.toLowerCase();
+    card.style.display = texto.includes(query) ? '' : 'none';
+  });
+}
+
 // --- Verificar pago de MP ---
 async function verificarPago() {
   try {
