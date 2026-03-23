@@ -591,11 +591,11 @@ header {
   color: #3b82f6;
 }
 
-.logo-img {
-  width: 28px;
-  height: 28px;
-  max-width: 28px;
-  max-height: 28px;
+img.logo-img {
+  width: 28px !important;
+  height: 28px !important;
+  max-width: 28px !important;
+  max-height: 28px !important;
   border-radius: 6px;
   object-fit: contain;
   flex-shrink: 0;
