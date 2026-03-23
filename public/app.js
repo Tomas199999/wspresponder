@@ -78,7 +78,7 @@ async function fetchAuth(url, options = {}) {
 // --- Cargar usuario ---
 async function cargarUsuario() {
   try {
-    const res = await fetchAuth('/usuario');
+    const res = await fetchAuth(`/usuario?t=${Date.now()}`);
     const data = await res.json();
     if (data.ok === false) return;
     actualizarUI(data);
